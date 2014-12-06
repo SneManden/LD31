@@ -16,7 +16,7 @@
         <script src="js/snowman.js"></script>
         <script src="js/dragon.js"></script>
         <script>
-        (function() {
+        // (function() {
             var game = new Phaser.Game(400, 300, Phaser.AUTO, "",
                 null, false, false);
             game.state.add("Init", LD31.Init);
@@ -26,8 +26,8 @@
             game.state.start("Init");
             // Setup proper scaling
             var pixel = {scale:2, canvas:null, context:null, width:0, height:0};
-            game.pixel = pixel;
-        })();
+            // game.pixel = pixel;
+        // })();
         </script>
     </body>
 </html>
