@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>LD31: A fiery battle (working title)</title>
+        <!--<link rel="shortcut icon" href="favicon.ico">-->
+        <link rel="stylesheet" href="css/normalize.css">
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+        <script src="js/dependencies/phaser.map"></script>
+        <script src="js/dependencies/phaser.js"></script>
+        <script src="js/init.js"></script>
+        <script src="js/preload.js"></script>
+        <script src="js/game.js"></script>
+        <script src="js/snowman.js"></script>
+        <script src="js/dragon.js"></script>
+        <script>
+        (function() {
+            var game = new Phaser.Game(400, 300, Phaser.AUTO, "",
+                null, false, false);
+            game.state.add("Init", LD31.Init);
+            game.state.add("Preload", LD31.Preload);
+            game.state.add("Game", LD31.Game);
+            // Start state
+            game.state.start("Init");
+            // Setup proper scaling
+            var pixel = {scale:2, canvas:null, context:null, width:0, height:0};
+            game.pixel = pixel;
+        })();
+        </script>
+    </body>
+</html>
