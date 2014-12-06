@@ -42,20 +42,37 @@ LD31.Game.prototype = {
 
         // Check collision
         this.game.physics.arcade.overlap(this.snowman.balls, this.dragon.parts,
-            this.handleCollision, null, this);
+            this.handleBallCollision, null, this);
+
+        this.game.physics.arcade.overlap(this.snowman.sprite, this.dragon.parts,
+            this.handleSnowmanCollision, null, this);
     },
 
-    handleCollision: function(ball, dragonbody) {
+    handleBallCollision: function(ball, dragonbody) {
         ball.kill();
         this.dragon.hit(dragonbody, 5);
     },
 
+    handleSnowmanCollision: function(snowman, dragonbody) {
+        var damage, health = this.dragon.health;
+        switch (dragonbody.dragontype) {
+            case "body":
+                damage = (health[dragonbody.dragonindex] == 0 ? 0 : 1); break;
+            case "fire": damage = 2; break;
+            case "head":
+                damage = (health[dragonbody.dragonindex] == 0 ? 0 : 3); break;
+            default: damage = 0; break;
+        }
+        if (damage > 0)
+            snowman.parentObject.hit(damage);
+    },
+
     render: function() {
+        // this.game.debug.body(this.snowman.sprite);
+        // this.game.debug.body(this.dragon.firesprite);
+
         // this.game.debug.spriteInfo(this.dragon.head, 10, this.game.height-80);
         // this.renderPixelScaled();
-
-        // for (var i=0; i<this.dragon.bodyparts+1; i++)
-        //     this.game.debug.body(this.dragon.sprites[i]);
     },
 
     renderPixelScaled: function() {
