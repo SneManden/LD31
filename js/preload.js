@@ -4,7 +4,6 @@ LD31.Preload = function(game) {
 LD31.Preload.prototype = {
 
     preload: function() {
-        console.log("Preload: preload()");
         // Load sprites
         this.load.image('background', 'img/back.png');
         this.load.spritesheet("scenery", "img/scenery.png", 16, 16, 16);
@@ -21,7 +20,7 @@ LD31.Preload.prototype = {
     },
 
     create: function() {
-        this.state.start("Game");
+        LD31.transitionTo(this, "Menu", 500);
     }
 
 };

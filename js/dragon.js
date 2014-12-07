@@ -155,7 +155,6 @@ LD31.Dragon.prototype = {
             var t = this.nextTarget();
             this.target.x = t.x;
             this.target.y = t.y;
-            // console.log("Target (x:",this.target.x,", y:",this.target.y,")");
         }
 
         // Update snowman position
@@ -176,7 +175,6 @@ LD31.Dragon.prototype = {
 
     nextTarget: function() {
         this.targetindex = (this.targetindex+1) % this.targets.length;
-        // console.log("targetindex =", this.targetindex);
         // Set next target
         this.target.x = this.targets[this.targetindex].x;
         this.target.y = this.targets[this.targetindex].y;
@@ -285,7 +283,6 @@ LD31.Dragon.prototype = {
         this.sprites = null;
         this.history = null;
         this.firesprite.kill();
-        console.log("DRAGON IS KILLED!");
 
         // this.game.world.sendToBack(this.parts);
         this.game.world.setChildIndex(this.parts, 1);

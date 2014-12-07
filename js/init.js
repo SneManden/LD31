@@ -6,16 +6,15 @@ LD31.Init = function(game) {
 LD31.Init.prototype = {
 
     init: function() {
-        console.log("Init: init()");
-        this.stage.backgroundColor = 0x4fd658;
+        this.stage.backgroundColor = "#262733";
 
         this.scaleSetup();
         // this.pixelScaleSetup();
     },
 
     scaleSetup: function() {
-        this.game.scale.maxWidth = 800;
-        this.game.scale.maxHeight = 600;
+        this.game.scale.maxWidth = 1200;
+        this.game.scale.maxHeight = 900;
         this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.game.scale.setScreenSize();
     },
@@ -38,4 +37,32 @@ LD31.Init.prototype = {
         this.state.start("Preload");
     }
 
+};
+
+
+/**
+ * Transition effect for context to state over time
+ */
+LD31.transitionTo = function(context, state, time) {
+    var self = context,
+        game = self.game;
+    // Add black transparent sprite filling the whole scene
+    var square = new Phaser.Rectangle(0, 0, game.width, game.height),
+        graphics = game.add.graphics(0, 0);
+    graphics.beginFill(0x000000);
+    graphics.drawRect(square.x, square.y, square.width, square.height);
+    graphics.endFill();
+    graphics.alpha = 0;
+    // Tween alpha from transparent to opaque
+    var tween = game.add.tween(graphics).to({alpha:1}, time,
+        Phaser.Easing.Linear.Out, true);
+    // Stop music
+    if (self.backaudio)
+        self.backaudio.fadeOut(time);
+    // Go to state on transition completion
+    tween.onComplete.add(function() {        
+        this.game.sound.stopAll();
+        // Go to state
+        this.state.start(state);
+    }, self);
 };

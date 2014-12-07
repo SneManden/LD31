@@ -114,7 +114,7 @@ LD31.Snowman.prototype = {
     },
 
     hit: function(damage) {
-        if (!this.canBeHit) return false; // not hit
+        if (!this.canBeHit || this.dead) return false; // not hit
 
         if (this.hurtsnd) this.hurtsnd.play();
 
@@ -156,8 +156,6 @@ LD31.Snowman.prototype = {
     },
 
     defeated: function() {
-        console.log("SNOWMAN IS DEAD!");
-
         this.sprite.body.velocity.x = this.sprite.body.velocity.y = 0;
         // Animate dead
         this.dieanim.onComplete.add(function() {
@@ -167,6 +165,11 @@ LD31.Snowman.prototype = {
 
         // Set dead
         this.dead = true;
+
+        // Save score and transition to gameover screen
+        console.log("GAME OVER! Your score is", this.score);
+        this.game.score = this.score;
+        LD31.transitionTo(this.ld31, "Gameover", 5000);
     },
 
     controls: function() {

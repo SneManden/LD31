@@ -1,14 +1,10 @@
 LD31.Game = function(game) {
     this.game = game;
+    this.score = 0;
 };
 LD31.Game.prototype = {
 
-    preload: function() {
-        console.log("Game: preload()");
-    },
-
     create: function() {
-        console.log("Game: create()");
         this.center = {x:this.game.width/2, y:this.game.height/2};
 
         this.game.ld31 = this; // debug
