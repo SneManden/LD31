@@ -1,0 +1,26 @@
+body {
+    overflow-y: hidden;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#gamecontainer {
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+.info {
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 600px;
+}
+.info h1 {
+    font-size: 18px;
+}
+.info p {
+    font-size: 12px;
+}

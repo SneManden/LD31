@@ -13,8 +13,8 @@ LD31.Init.prototype = {
     },
 
     scaleSetup: function() {
-        this.game.scale.maxWidth = 1200;
-        this.game.scale.maxHeight = 900;
+        this.game.scale.maxWidth = 800;
+        this.game.scale.maxHeight = 600;
         this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.game.scale.setScreenSize();
     },
