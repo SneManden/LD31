@@ -25,15 +25,18 @@ LD31.Game.prototype = {
             right: this.game.input.keyboard.addKey(Phaser.Keyboard.D)
         };
 
-        // Add Dragon
-        var dragonpos = {x:this.center.x*0.8, y:this.center.y/2};
-        this.dragon = new LD31.Dragon(this, this.game, dragonpos);
-        this.dragon.create();
+        // Add background
+        this.back = this.game.add.sprite(0, 0, "background");
+        this.back.scale.setTo(2, 2);
 
         // Add Snowman
         var snowmanpos = {x:this.center.x, y:this.center.y};
         this.snowman = new LD31.Snowman(this, this.game, snowmanpos);
         this.snowman.create();
+        // Add Dragon
+        var dragonpos = {x:this.center.x*0.8, y:this.center.y/2};
+        this.dragon = new LD31.Dragon(this, this.game, dragonpos, this.snowman);
+        this.dragon.create();
     },
 
     update: function() {

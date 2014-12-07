@@ -38,12 +38,22 @@ LD31.Snowman.prototype = {
         this.balls.createMultiple(this.numballs, "scenery", 0); // frame = 0
         this.balls.setAll("checkWorldBounds", true);
         this.balls.setAll("outOfBoundsKill", true);
+
+        // Setup animation
+        // this.sprite.animations.add("throwball", [4, 0], 45, false);
     },
 
     update: function() {
         if (this.dead) return;
 
         this.controls();
+
+        var mousey = this.game.input.mousePointer.y;
+        if ((this.sprite.frame % 4) < 2) {  // Facing down
+            if (mousey < this.sprite.y) this.sprite.frame += 2;
+        } else {                            // Facing up
+            if (mousey > this.sprite.y) this.sprite.frame -= 2;
+        }
     },
 
     throwBall: function() {
@@ -57,7 +67,10 @@ LD31.Snowman.prototype = {
                 ball.transitionTween.stop();
             ball.alpha = 1;
             ball.anchor.set(0.5);
-            ball.reset(this.sprite.x-12, this.sprite.y);
+            if ((this.sprite.frame % 4) < 2) // facing down
+                ball.reset(this.sprite.x-12, this.sprite.y);
+            else
+                ball.reset(this.sprite.x+12, this.sprite.y);
             // Throw ball in direction of pointer with distance of throwRange
             // with a speed of ballspeed
             var mouse = game.input.mousePointer,
@@ -70,14 +83,20 @@ LD31.Snowman.prototype = {
                 quadout = Phaser.Easing.Quadratic.Out;
             ball.transitionTween = game.add.tween(ball.position).to(
                 dest, time, quadout, true);
+            // Animate
+            var oldframe = this.sprite.frame;
+            this.sprite.frame = oldframe + 4
+            if (oldframe % 2 == 1) // hurt
+                oldframe = oldframe - 1;
+            this.game.time.events.add(50, function() {
+                this.sprite.frame = oldframe;
+            }, this);
+            // this.sprite.animations.getAnimation("throwball").play();
         }
     },
 
     hit: function(damage) {
         if (!this.canBeHit) return false; // not hit
-
-        console.log("snowman hit with", damage);
-
         this.health -= damage;
         if (this.health <= 0) {
             this.health = 0;
@@ -90,7 +109,9 @@ LD31.Snowman.prototype = {
     flinch: function() {
         this.canBeHit = false;
         var oldframe = this.sprite.frame;
-        this.sprite.frame = 1;
+        this.sprite.frame = oldframe+1;
+        if (oldframe > 3)
+            oldframe = oldframe - 4;
         this.game.time.events.add(50, function() {
             this.canBeHit = true;
             this.sprite.frame = oldframe;
@@ -98,6 +119,7 @@ LD31.Snowman.prototype = {
     },
 
     defeated: function() {
+        console.log("SNOWMAN IS DEAD!");
         this.sprite.kill();
         this.dead = true;
     },
@@ -106,13 +128,13 @@ LD31.Snowman.prototype = {
         var dir = {x:0, y:0},
             diag = 0.7071067812; // if moving diagonally: speed = 0.5*sqrt(2)
 
-        if (this.upIsDown())
+        if (this.upIsDown() && this.sprite.y > this.sprite.height/2)
             dir.y -= 1;
-        if (this.leftIsDown())
+        if (this.leftIsDown() && this.sprite.x > this.sprite.width/2)
             dir.x -= 1;
-        if (this.downIsDown())
+        if (this.downIsDown() && this.sprite.y < this.game.height-this.sprite.height/2)
             dir.y += 1;
-        if (this.rightIsDown())
+        if (this.rightIsDown() && this.sprite.x < this.game.width-this.sprite.width/2)
             dir.x += 1;
         // Set propor speed (considering diagonal speed has to be the same too!)
         if (Math.abs(dir.x) == 1 && Math.abs(dir.y) == 1) {

@@ -1,15 +1,16 @@
-LD31.Dragon = function(ld31, game, position) {
+LD31.Dragon = function(ld31, game, position, enemy) {
     this.ld31 = ld31;
     this.game = game;
     this.position = (typeof position === "undefined" ? {x:0, y:0} : position);
+    this.enemy = enemy;
     // Internal variables
     this.ticks = 0;
     this.history = {};
     this.turn = 0;
     // Entity variables
     this.dead = false;
-    this.bodyMaxHealth = 25;
-    this.headMaxHealth = 100;
+    this.bodyMaxHealth = 75;
+    this.headMaxHealth = 200;
     this.health = [];
     this.speed = 75;
     this.turnSpeed = 180*50;
@@ -21,6 +22,8 @@ LD31.Dragon = function(ld31, game, position) {
     this.firesprite = null;
 
     this.target = {x:0, y:0};
+    this.targets = [];
+    this.targetindex = 0;
     this.canBeHit = [];
 };
 LD31.Dragon.prototype = {
@@ -60,12 +63,14 @@ LD31.Dragon.prototype = {
         }
 
         this.firesprite = this.parts.create(
-            this.position.x, this.position.y, "dragonbreath", 28); // frame = 8
+            this.position.x, this.position.y, "dragonbreath", 16); // frame = 16
         this.firesprite.anchor.set(0.5);
         this.firesprite.scale.setTo(3, 3);
         this.firesprite.kill();
         this.firesprite.dragontype = "fire";
         this.firesprite.body.setSize(24, 24, 0, 0);
+        var anim = this.firesprite.animations.add("fire", [16, 17], 30, true);
+        anim.play();
 
         // Head
         var head = this.head = this.parts.create(
@@ -85,20 +90,21 @@ LD31.Dragon.prototype = {
 
         // Funny number
         this.limit = Math.floor(60/(Math.abs(this.speed)/(this.bodyWidth-4)));
+
+        // Setup behaviour
+        var center = {x:this.game.width/2, y:this.game.height/2};
+        this.targets[0] = {x:  center.x/2, y:  center.y/2};
+        this.targets[1] = {x:3*center.x/2, y:  center.y/2};
+        this.targets[2] = {x:  center.x/2, y:3*center.y/2};
+        this.targets[3] = {x:3*center.x/2, y:3*center.y/2};
+        this.targets[4] = {x:this.enemy.sprite.x, y:this.enemy.sprite.y};
+        this.targetindex = 4;
     },
 
     update: function() {
         if (this.dead) return;
 
-        if (!this.ld31.snowman.dead)
-            this.aggressiveBehaviour();
-        else {
-            // Set target to be snowman
-            if (this.ticks % 60 == 0) {
-                this.target.x = Math.floor( Math.random()*this.game.width );
-                this.target.y = Math.floor( Math.random()*this.game.height );
-            }
-        }
+        this.behaviour();
 
         this.rotateTowardsTarget(this.target);
 
@@ -141,13 +147,47 @@ LD31.Dragon.prototype = {
         this.ticks++;
     },
 
-    aggressiveBehaviour: function() {
-        // Set target to be snowman
+    behaviour: function() {
+        if (this.ticks % 360 == 0) {
+            var t = this.nextTarget();
+            this.target.x = t.x;
+            this.target.y = t.y;
+            // console.log("Target (x:",this.target.x,", y:",this.target.y,")");
+        }
+
+        // Update snowman position
         if (this.ticks % 30 == 0) {
-            this.target.x = this.ld31.snowman.sprite.x;
-            this.target.y = this.ld31.snowman.sprite.y;
+            if (!this.enemy.dead) {
+                this.targets[4].x = Math.floor( this.enemy.sprite.x );
+                this.targets[4].y = Math.floor( this.enemy.sprite.y );
+            } else {
+                this.targets[4].x = Math.floor( Math.random() * this.game.width );
+                this.targets[4].y = Math.floor( Math.random() * this.game.height );
+            }
+            if (this.targetindex == 4) {
+                this.target.x = this.targets[4].x;
+                this.target.y = this.targets[4].y;
+            }
         }
     },
+
+    nextTarget: function() {
+        this.targetindex = (this.targetindex+1) % this.targets.length;
+        // console.log("targetindex =", this.targetindex);
+        // Set next target
+        this.target.x = this.targets[this.targetindex].x;
+        this.target.y = this.targets[this.targetindex].y;
+        // Update target index
+        return this.target;
+    },
+
+    // aggressiveBehaviour: function() {
+    //     // Set target to be snowman
+    //     if (this.ticks % 30 == 0) {
+    //         this.target.x = this.ld31.snowman.sprite.x;
+    //         this.target.y = this.ld31.snowman.sprite.y;
+    //     }
+    // },
 
     rotateTowardsTarget: function(target) {
         if (!target.x || !target.y) return false;

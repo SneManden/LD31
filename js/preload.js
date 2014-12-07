@@ -5,8 +5,9 @@ LD31.Preload.prototype = {
 
     preload: function() {
         console.log("Preload: preload()");
-        this.load.spritesheet("scenery", "img/scenery.png", 16, 16, 1);
-        this.load.spritesheet("snowman", "img/snowman.png", 32, 32, 2);
+        this.load.image('background', 'img/back.png');
+        this.load.spritesheet("scenery", "img/scenery.png", 16, 16, 16);
+        this.load.spritesheet("snowman", "img/snowman.png", 32, 32, 16);
         this.load.spritesheet("dragon",  "img/dragon.png",  32, 32, 8);
         this.load.spritesheet("dragonbreath",  "img/dragon.png",  32, 16, 32);
     },
