@@ -13,6 +13,10 @@ LD31.Game.prototype = {
 
         this.game.ld31 = this; // debug
 
+        // Audio
+        this.ballhitsnd = this.game.add.audio("ballhit", 0.5); // volume=0.5
+        this.backaudio = this.game.add.audio("sheepcandy", 1.0, true);
+
         // Physics
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -34,9 +38,20 @@ LD31.Game.prototype = {
         this.snowman = new LD31.Snowman(this, this.game, snowmanpos);
         this.snowman.create();
         // Add Dragon
-        var dragonpos = {x:this.center.x*0.8, y:this.center.y/2};
+        var dragonpos = {x:this.game.width*1.25, y:this.center.y/2};
         this.dragon = new LD31.Dragon(this, this.game, dragonpos, this.snowman);
         this.dragon.create();
+
+        // Font
+        var chars = Phaser.RetroFont.TEXT_SET1;
+        this.scoretext = this.game.add.retroFont('myfont', 5, 8, chars, 12);
+        // (text, multiline, charspacing, linespacing, align, allowlowercase)
+        this.scoretext.setText("Score: 0", true, 0, 0, "left", true);
+        this.scoreimg = this.game.add.image(10, 10, this.scoretext);
+        this.scoreimg.anchor.setTo(0.0, 0.5);
+
+        // Start background music
+        this.backaudio.play();
     },
 
     update: function() {
@@ -47,12 +62,15 @@ LD31.Game.prototype = {
         this.game.physics.arcade.overlap(this.snowman.balls, this.dragon.parts,
             this.handleBallCollision, null, this);
 
-        this.game.physics.arcade.overlap(this.snowman.sprite, this.dragon.parts,
-            this.handleSnowmanCollision, null, this);
+        if (!this.snowman.dead)
+            this.game.physics.arcade.overlap(this.snowman.sprite,
+                this.dragon.parts, this.handleSnowmanCollision, null, this);
     },
 
     handleBallCollision: function(ball, dragonbody) {
         ball.kill();
+        if (this.ballhitsnd)
+            this.ballhitsnd.play();
         this.dragon.hit(dragonbody, 5);
     },
 
@@ -71,6 +89,8 @@ LD31.Game.prototype = {
     },
 
     render: function() {
+        this.snowman.render();
+
         // this.game.debug.body(this.snowman.sprite);
         // this.game.debug.body(this.dragon.firesprite);
 

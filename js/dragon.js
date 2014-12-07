@@ -1,4 +1,4 @@
-LD31.Dragon = function(ld31, game, position, enemy) {
+LD31.Dragon = function(ld31, game, position, enemy, bodyparts, maxHealth) {
     this.ld31 = ld31;
     this.game = game;
     this.position = (typeof position === "undefined" ? {x:0, y:0} : position);
@@ -9,13 +9,13 @@ LD31.Dragon = function(ld31, game, position, enemy) {
     this.turn = 0;
     // Entity variables
     this.dead = false;
-    this.bodyMaxHealth = 75;
-    this.headMaxHealth = 200;
+    this.bodyMaxHealth = (typeof maxHealth === "undefined" ? 16 : maxHealth);
+    this.headMaxHealth = this.bodyMaxHealth*2;
     this.health = [];
     this.speed = 75;
     this.turnSpeed = 180*50;
     this.bodyWidth = 32;
-    this.bodyparts = 8;
+    this.bodyparts = (typeof bodyparts === "undefined" ? 4 : bodyparts);
     this.sprites = [];
     // Fire breath
     this.canBreath = true;
@@ -41,9 +41,9 @@ LD31.Dragon.prototype = {
 
         // Body
         pos = {x:this.position.x, y:this.position.y};
-        for (i=0; i<this.bodyparts; i++) {
-            if (i == 0) pos.x += 0.5*bodyWidth;
-            pos.x += bodyWidth;
+        pos.x += 0.5*bodyWidth + this.bodyparts*bodyWidth;
+        for (i=this.bodyparts-1; i>=0; i--) {
+            pos.x -= bodyWidth;
             body = this.parts.create(pos.x, pos.y, "dragon", 1); // frame = 1
             body.anchor.set(0.5);
             body.dragontype = "body";
@@ -90,6 +90,9 @@ LD31.Dragon.prototype = {
 
         // Funny number
         this.limit = Math.floor(60/(Math.abs(this.speed)/(this.bodyWidth-4)));
+
+        // Sounds
+        this.firesnd = this.game.add.audio("fire");
 
         // Setup behaviour
         var center = {x:this.game.width/2, y:this.game.height/2};
@@ -181,14 +184,6 @@ LD31.Dragon.prototype = {
         return this.target;
     },
 
-    // aggressiveBehaviour: function() {
-    //     // Set target to be snowman
-    //     if (this.ticks % 30 == 0) {
-    //         this.target.x = this.ld31.snowman.sprite.x;
-    //         this.target.y = this.ld31.snowman.sprite.y;
-    //     }
-    // },
-
     rotateTowardsTarget: function(target) {
         if (!target.x || !target.y) return false;
 
@@ -211,34 +206,16 @@ LD31.Dragon.prototype = {
         return true;
     },
 
-    /*circularBehaviour: function() {
-        this.game.physics.arcade.velocityFromAngle(
-            this.head.angle, -this.speed, this.head.body.velocity);
-        // this.head.body.velocity.x = vel.x;
-        // this.head.body.velocity.y = vel.y;
-
-        if (this.turn <= 0) {
-            if (this.turn == 0) this.turn = -5;
-            if (this.turn < -1) this.turn++;
-
-            if (this.turn == -1 && Math.round(this.head.angle) % 180 == 0)
-                this.turn = 60;
-            else
-                this.head.body.angularVelocity = -50;
-        } else {
-            this.head.body.angularVelocity = 0;
-            this.head.angle = (Math.abs(this.head.angle) < 90 ? 0 : 180);
-            this.turn--;
-        }
-    },*/
-
     breath: function() {
         if (this.canBreath) {
             this.canBreath = false;
             this.firesprite.revive();
 
+            if (this.firesnd) this.firesnd.fadeIn(100);
+
             this.game.time.events.add(2000, function() { // Stop breath
                 this.firesprite.kill();
+                this.firesnd.fadeOut(500);
             }, this);
 
             this.game.time.events.add(5000, function() { // Enable breath
@@ -256,6 +233,7 @@ LD31.Dragon.prototype = {
 
             this.health[index] -= damage;
             if (this.health[index] <= 0) {
+                this.enemy.updateScore(1);
                 // Kill body part
                 this.health[index] = 0;
                 part.frame += 4;
@@ -276,6 +254,8 @@ LD31.Dragon.prototype = {
             // => All body parts are dead: now take damage
             this.health[0] -= damage;
             if (this.health[0] <= 0) {
+                this.enemy.updateScore(
+                    Math.pow(10, log_to_base(this.bodyparts, 2)));
                 this.health[0] = 0;
                 part.frame += 4;
                 this.defeated(); // kill dragon
@@ -290,7 +270,7 @@ LD31.Dragon.prototype = {
         this.canBeHit[index] = false;
         var oldframe = part.frame;
         part.frame = oldframe+4;
-        this.game.time.events.add(50, function() {
+        this.game.time.events.add(100, function() {
             part.frame = oldframe;
             this.canBeHit[index] = true;
         }, this);
@@ -301,11 +281,36 @@ LD31.Dragon.prototype = {
         this.head.body.velocity.x = this.head.body.velocity.y = 0;
         this.head.body.angularVelocity = 0;
         this.head = null;
-        this.parts = null;
+        // this.parts = null;
         this.sprites = null;
         this.history = null;
         this.firesprite.kill();
         console.log("DRAGON IS KILLED!");
+
+        // this.game.world.sendToBack(this.parts);
+        this.game.world.setChildIndex(this.parts, 1);
+
+        // Starts a 1-second-fading-tween after 5 seconds => then destroys it
+        this.game.time.events.add(5000, function() {
+            var tween = this.game.add.tween(this.parts).to({alpha:0.25}, 5000,
+                Phaser.Easing.Linear.Out, true);
+        }, this);
+
+        // Spawn a new one!
+        var width = this.game.width,
+            height = this.game.height,
+            pos = { x:width*1.25,
+                    y:Math.floor(Math.random()*height) },
+            health = 16*log_to_base(this.bodyparts, 2) + this.bodyMaxHealth;
+
+        var dragon = this.ld31.dragon = new LD31.Dragon(this.ld31, this.game,
+            pos, this.enemy, this.bodyparts*2, health);
+        dragon.create();
     }
 
 };
+
+
+function log_to_base(x, n) {
+    return Math.log(x) / Math.log(n);
+}

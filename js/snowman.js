@@ -1,4 +1,4 @@
-LD31.Snowman = function(ld31, game, position) {
+LD31.Snowman = function(ld31, game, position, maxHealth) {
     this.ld31 = ld31;
     this.game = game;
     this.position = (typeof position === "undefined" ? {x:0, y:0} : position);
@@ -12,8 +12,14 @@ LD31.Snowman = function(ld31, game, position) {
     this.throwRange = 500;
     //
     this.canBeHit = true;
-    this.health = 100;
+    this.maxHealth = (typeof maxHealth === "undefined" ? 100 : maxHealth);
+    this.health = this.maxHealth;
+    this.healthbarcolors = ["#578BE6", "#57D3E6"];
+    this.healthbarcolor = 0;
     this.dead = false;
+    this.score = 0;
+
+    this.ticks = 0;
 };
 LD31.Snowman.prototype = {
 
@@ -39,8 +45,17 @@ LD31.Snowman.prototype = {
         this.balls.setAll("checkWorldBounds", true);
         this.balls.setAll("outOfBoundsKill", true);
 
+        // Setup audio
+        this.hurtsnd = this.game.add.audio("hurt");
+
+        // Setup healthbar
+        this.healthbarback = new Phaser.Rectangle(5, this.game.height-10,
+            this.game.width-10, 5);
+        this.healthbar = new Phaser.Rectangle(6, this.game.height-9,
+            this.game.width-12, 3);
+
         // Setup animation
-        // this.sprite.animations.add("throwball", [4, 0], 45, false);
+        this.dieanim = this.sprite.animations.add("dieanim", [8, 9, 10], 1, false);
     },
 
     update: function() {
@@ -54,6 +69,8 @@ LD31.Snowman.prototype = {
         } else {                            // Facing up
             if (mousey > this.sprite.y) this.sprite.frame -= 2;
         }
+
+        this.ticks++;
     },
 
     throwBall: function() {
@@ -97,13 +114,26 @@ LD31.Snowman.prototype = {
 
     hit: function(damage) {
         if (!this.canBeHit) return false; // not hit
+
+        if (this.hurtsnd) this.hurtsnd.play();
+
         this.health -= damage;
         if (this.health <= 0) {
             this.health = 0;
             this.defeated();
         } else
             this.flinch();
+        this.updateHealthbar();
         return true;
+    },
+
+    updateHealthbar: function() {
+        var width = (this.health / this.maxHealth)*(this.healthbarback.width-2);
+        if (this.health > 0 && width < 1) // Display at least 1 pixel of health
+            width = 1;
+        if (this.health < this.maxHealth/4) // Change color when critical
+            this.healthbarcolor = this.healthbarcolors.length-1;
+        this.healthbar.width = Math.floor( width );
     },
 
     flinch: function() {
@@ -112,15 +142,29 @@ LD31.Snowman.prototype = {
         this.sprite.frame = oldframe+1;
         if (oldframe > 3)
             oldframe = oldframe - 4;
-        this.game.time.events.add(50, function() {
+        this.game.time.events.add(100, function() {
             this.canBeHit = true;
             this.sprite.frame = oldframe;
         }, this);
     },
 
+    updateScore: function(value) {
+        this.score += value;
+        // (text, multiline, charspacing, linespacing, align, allowlowercase)
+        this.ld31.scoretext.setText("Score: "+this.score,true,0,0,"left",true);
+    },
+
     defeated: function() {
         console.log("SNOWMAN IS DEAD!");
-        this.sprite.kill();
+
+        this.sprite.body.velocity.x = this.sprite.body.velocity.y = 0;
+        // Animate dead
+        this.dieanim.onComplete.add(function() {
+            this.sprite.frame = 10;
+        }, this);
+        this.dieanim.play();
+
+        // Set dead
         this.dead = true;
     },
 
@@ -148,6 +192,15 @@ LD31.Snowman.prototype = {
         // Throw ball
         if (this.game.input.mousePointer.isDown)
             this.throwBall();
+    },
+
+    render: function() {
+        var debug = this.game.debug;
+        debug.geom(this.healthbarback, "#000");
+
+        // Make healthbar blink if low
+        if (!(this.health < this.maxHealth/8 && this.ticks % 60 < 30))
+            debug.geom(this.healthbar, this.healthbarcolors[this.healthbarcolor]);
     },
 
     upIsDown: function() {
