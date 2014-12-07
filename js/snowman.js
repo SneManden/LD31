@@ -28,6 +28,13 @@ LD31.Snowman.prototype = {
     },
 
     create: function() {
+        // Setup healthbar
+        this.healthbarback = new Phaser.Rectangle(5, this.game.height-10,
+            this.game.width-10, 5);
+        this.healthbar = new Phaser.Rectangle(6, this.game.height-9,
+            this.game.width-12, 3);
+
+        // Create sprite
         this.sprite = this.game.add.sprite(
             this.position.x, this.position.y, "snowman", 0); // frame = 0
         this.sprite.anchor.set(0.5);
@@ -47,12 +54,6 @@ LD31.Snowman.prototype = {
 
         // Setup audio
         this.hurtsnd = this.game.add.audio("hurt");
-
-        // Setup healthbar
-        this.healthbarback = new Phaser.Rectangle(5, this.game.height-10,
-            this.game.width-10, 5);
-        this.healthbar = new Phaser.Rectangle(6, this.game.height-9,
-            this.game.width-12, 3);
 
         // Setup animation
         this.dieanim = this.sprite.animations.add("dieanim", [8, 9, 10], 1, false);
